@@ -6,6 +6,7 @@ A minimal Flask + SQLAlchemy app to manage HR policies, extract machine‑checka
 - Policies CRUD (scope: leave, benefit, or both)
 - Rule extraction via LangChain + LangGraph
 - CSV dataset upload (leave/benefit)
+- Download uploaded datasets (CSV)
 - Compliance engine for:
   - leave_advance_days
   - benefit_max_amount

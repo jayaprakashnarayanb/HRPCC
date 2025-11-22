@@ -2,6 +2,59 @@
 {% block content %}
 <h2>Policies (Leave & Benefit Claims)</h2>
 
+<h3>Existing Datasets</h3>
+<table class="table table-sm table-striped mb-4">
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Type</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in datasets %}
+    <tr>
+      <td>{{ d.id }}</td>
+      <td>{{ d.name }}</td>
+      <td>{{ d.dataset_type }}</td>
+      <td>
+        <a href="{{ url_for('download_dataset', dataset_id=d.id) }}" class="btn btn-sm btn-outline-secondary">Download</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+
+<h3>View Policy & Rules</h3>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-auto">
+    <label class="form-label">Select Policy</label>
+    <select name="policy_id" class="form-select" onchange="this.form.submit()">
+      <option value="">Choose...</option>
+      {% for p in policies %}
+        <option value="{{ p.id }}" {% if selected_policy and selected_policy.id == p.id %}selected{% endif %}>{{ p.id }}: {{ p.name }} ({{ p.scope }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto align-self-end">
+    <button class="btn btn-primary" type="submit">Load</button>
+  </div>
+  </form>
+
+{% if selected_policy %}
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <label class="form-label">Raw Policy Text</label>
+      <textarea class="form-control" rows="12" readonly>{{ selected_policy.raw_text }}</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Transformed Rules (JSON)</label>
+      <textarea class="form-control" rows="12" readonly>{% if rules_json_str %}{{ rules_json_str }}{% else %}[]{% endif %}</textarea>
+      {% if not rules_json_str %}
+        <div class="form-text">No rules saved yet. Use Preview Extraction or Simple Parse to create rules.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
 <form method="post" class="mb-4">
   <div class="mb-3">
     <label class="form-label">Policy Name</label>

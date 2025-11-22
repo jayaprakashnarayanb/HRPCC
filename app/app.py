@@ -4,7 +4,7 @@ import shutil
 import json
 from flask import (
     Flask, request, render_template, redirect,
-    url_for, jsonify, flash
+    url_for, jsonify, flash, send_file
 )
 from werkzeug.utils import secure_filename
 from sqlalchemy.orm import Session
@@ -115,8 +115,45 @@ def create_app():
                 flash("Policy created", "success")
                 return redirect(url_for("policies"))
 
-        policies = db.query(Policy).all()
-        return render_template("policies.html", policies=policies)
+        policies_list = db.query(Policy).all()
+        datasets_list = db.query(Dataset).all()
+
+        # Optional selected policy for side-by-side view
+        selected_policy = None
+        rules_json_str = None
+        try:
+            selected_id = request.args.get("policy_id")
+            if selected_id:
+                selected_policy = (
+                    db.query(Policy).filter(Policy.id == int(selected_id)).first()
+                )
+                if selected_policy:
+                    rules = db.query(Rule).filter(Rule.policy_id == selected_policy.id).all()
+                    rules_payload = [
+                        {
+                            "id": r.id,
+                            "rule_code": r.rule_code,
+                            "description": r.description,
+                            "category": r.category,
+                            "severity": r.severity,
+                            "check_type": r.check_type,
+                            "params": r.params,
+                        }
+                        for r in rules
+                    ]
+                    rules_json_str = json.dumps(rules_payload, indent=2, ensure_ascii=False)
+        except Exception:
+            # Non-fatal; simply don't show selection block
+            selected_policy = None
+            rules_json_str = None
+
+        return render_template(
+            "policies.html",
+            policies=policies_list,
+            datasets=datasets_list,
+            selected_policy=selected_policy,
+            rules_json_str=rules_json_str,
+        )
 
     @app.route("/policies/<int:policy_id>/extract_rules", methods=["POST"])
     def extract_rules(policy_id):
@@ -268,6 +305,27 @@ def create_app():
         return render_template(
             "datasets.html", datasets=datasets, policies=policies
         )
+
+    @app.route("/datasets/<int:dataset_id>/download", methods=["GET"])
+    def download_dataset(dataset_id: int):
+        db = next(get_db())
+        d = db.query(Dataset).filter(Dataset.id == dataset_id).first()
+        if not d or not d.file_path:
+            flash("Dataset not found", "error")
+            return redirect(url_for("datasets"))
+        try:
+            path = d.file_path
+            if not os.path.isabs(path):
+                path = os.path.abspath(path)
+            if not os.path.exists(path):
+                flash("File not found on server", "error")
+                return redirect(url_for("datasets"))
+
+            # Provide the file as an attachment with its original basename
+            return send_file(path, as_attachment=True, download_name=os.path.basename(path))
+        except Exception as e:
+            flash(f"Download failed: {e}", "error")
+            return redirect(url_for("datasets"))
 
     # ---- Compliance run ----
     @app.route("/compliance/run", methods=["POST"])
