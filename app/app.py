@@ -153,6 +153,29 @@ def create_app():
             rules_json_str=rules_json_str,
         )
 
+    # ---- LLM Translate (ad-hoc, no DB) ----
+    @app.route("/translate", methods=["GET", "POST"])
+    def translate_page():
+        """Ad-hoc page to translate arbitrary policy text to JSON via LLM without saving."""
+        result = None
+        error = None
+        scope = request.form.get("scope", "both") if request.method == "POST" else "both"
+        text = request.form.get("raw_text", "") if request.method == "POST" else ""
+        if request.method == "POST":
+            try:
+                from .ai import extract_rules_with_langgraph
+                result = extract_rules_with_langgraph(text, scope)
+            except Exception as e:
+                error = str(e)
+        return render_template(
+            "translate.html",
+            scope=scope,
+            raw_text=text,
+            result_json=result,
+            result_json_str=json.dumps(result or [], indent=2, ensure_ascii=False),
+            error=error,
+        )
+
     @app.route("/policies/<int:policy_id>/extract_rules", methods=["POST"])
     def extract_rules(policy_id):
         db = next(get_db())
@@ -412,6 +435,21 @@ def create_app():
                 for v in vs
             ]
         )
+
+    # Simple JSON API: Translate policy text to rules via LLM (no persistence)
+    @app.route("/api/extract_rules", methods=["POST"])
+    def api_extract_rules():
+        try:
+            data = request.get_json(force=True, silent=False) or {}
+            text = data.get("policy_text") or data.get("text") or ""
+            scope = data.get("scope", "both")
+            if not text:
+                return jsonify({"error": "policy_text is required"}), 400
+            from .ai import extract_rules_with_langgraph
+            rules = extract_rules_with_langgraph(text, scope)
+            return jsonify(rules)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     # ---- Seed demo data ----
     @app.route("/seed")

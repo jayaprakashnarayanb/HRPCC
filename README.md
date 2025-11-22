@@ -13,9 +13,10 @@ A minimal Flask + SQLAlchemy app to manage HR policies, extract machine‑checka
   - benefit_requires_receipt
   - benefit_allowed_types
 - Optional violation explanations via LangChain
- - Settings page to test LLM connectivity and view model
- - Rule Extraction Preview before saving to DB
- - Simple parser to extract rules from plain English (no LLM)
+- Settings page to test LLM connectivity and view model
+- Rule Extraction Preview before saving to DB
+- Simple parser to extract rules from plain English (no LLM)
+ - Ad-hoc Translate page to LLM-convert any policy text to rules JSON (no DB write)
 
 ## Quickstart (Local)
 1. Python 3.10+
@@ -45,6 +46,7 @@ Upload the CSVs on the Datasets page. Add a policy (e.g., paste sample_policy.tx
 - Settings: check LLM setup and run a quick connectivity test.
 - Policies: use “Preview Extraction” to inspect the JSON before saving; use “Extract & Save” to persist rules immediately.
 - Policies: use “Extract (Simple Parse)” to convert supported plain-English sentences into rules deterministically (no LLM required).
+ - Translate: paste any policy text and run LLM extraction without creating a Policy; copy the JSON.
 
 ### CLI: Translate policy text to JSON (LLM)
 Use the provided script to convert a policy text file into rules JSON using the same LangChain/LangGraph extractor used by the app.
@@ -55,6 +57,14 @@ Use the provided script to convert a policy text file into rules JSON using the 
   - `cat sample_data/sample_policy.txt | python scripts/extract_rules_llm.py --scope leave --pretty`
 
 The script prints a JSON array of rules to stdout.
+
+### HTTP API: Translate policy to rules JSON (LLM)
+POST `/api/extract_rules`
+
+Body (JSON):
+{ "policy_text": "...", "scope": "leave|benefit|both" }
+
+Response: JSON array of rule objects (same schema as used by the app). No data is persisted.
 
 ## Simple-English Policy Format (Deterministic)
 You can write policies in straightforward sentences that the app can parse without any AI. Supported patterns are case-insensitive and should end in periods:

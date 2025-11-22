@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Translate Policy Text to Rules (LLM)</h2>
+<p class="text-muted">Paste any policy text below and run LLM extraction without saving to the database.</p>
+
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<form method="post" class="mb-4">
+  <div class="mb-3">
+    <label class="form-label">Scope</label>
+    <select name="scope" class="form-select">
+      <option value="both" {% if scope=='both' %}selected{% endif %}>Leave & Benefits</option>
+      <option value="leave" {% if scope=='leave' %}selected{% endif %}>Leave only</option>
+      <option value="benefit" {% if scope=='benefit' %}selected{% endif %}>Benefits only</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Policy Text</label>
+    <textarea name="raw_text" rows="10" class="form-control" required>{{ raw_text }}</textarea>
+  </div>
+  <button class="btn btn-primary" type="submit">Extract Rules</button>
+</form>
+
+{% if result_json is not none %}
+  <h5>Extracted JSON</h5>
+  <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap;">{{ result_json_str }}</pre>
+{% endif %}
+{% endblock %}
+
