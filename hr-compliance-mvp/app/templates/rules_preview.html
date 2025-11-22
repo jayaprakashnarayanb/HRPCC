@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Rule Extraction Preview — {{ policy.name }}</h2>
+<p>Scope: <strong>{{ policy.scope }}</strong>. Found <strong>{{ rules_json|length }}</strong> rule(s).
+Use the button below to save these rules to the database, or go back to adjust the policy.</p>
+
+<div class="mb-3">
+  <form method="post" action="{{ url_for('save_rules', policy_id=policy.id) }}">
+    <input type="hidden" name="rules_json" value='{{ rules_json_str|tojson|safe }}'>
+    <button type="submit" class="btn btn-success">Save Rules</button>
+    <a href="{{ url_for('policies') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+  <small class="text-muted d-block mt-2">Saving will create new Rule records for this policy.</small>
+</div>
+
+<h5>Extracted JSON</h5>
+<pre class="bg-light p-3 border rounded" style="white-space: pre-wrap;">{{ rules_json_str }}</pre>
+{% endblock %}
+

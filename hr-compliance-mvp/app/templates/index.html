@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-3">Dashboard</h1>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Policies</h5>
+        <p class="card-text">{{ policies|length }} total</p>
+        <a href="{{ url_for('policies') }}" class="btn btn-primary btn-sm">Manage</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Datasets</h5>
+        <p class="card-text">{{ datasets|length }} uploaded</p>
+        <a href="{{ url_for('datasets') }}" class="btn btn-primary btn-sm">Manage</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Violations</h5>
+        <p class="card-text">{{ violations_count }} potential issues</p>
+        <a href="{{ url_for('violations') }}" class="btn btn-danger btn-sm">View</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

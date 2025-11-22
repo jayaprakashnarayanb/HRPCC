@@ -1,0 +1,4 @@
+employee_id,request_date,leave_start_date,notes
+E001,2025-01-01,2025-01-02,Short notice
+E002,2025-02-01,2025-02-10,Ok
+

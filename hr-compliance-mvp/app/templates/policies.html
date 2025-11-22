@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Policies (Leave & Benefit Claims)</h2>
+
+<form method="post" class="mb-4">
+  <div class="mb-3">
+    <label class="form-label">Policy Name</label>
+    <input type="text" name="name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Scope</label>
+    <select name="scope" class="form-select">
+      <option value="both">Leave & Benefits</option>
+      <option value="leave">Leave only</option>
+      <option value="benefit">Benefits only</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Policy Text</label>
+    <textarea name="raw_text" rows="8" class="form-control" required></textarea>
+  </div>
+  <button class="btn btn-success" type="submit">Save Policy</button>
+  </form>
+
+<h3>Existing Policies</h3>
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Scope</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for p in policies %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td>{{ p.name }}</td>
+      <td>{{ p.scope }}</td>
+      <td>
+        <form method="post" action="{{ url_for('extract_rules_preview', policy_id=p.id) }}" style="display:inline;">
+          <button class="btn btn-outline-primary btn-sm">Preview Extraction</button>
+        </form>
+        <form method="post" action="{{ url_for('extract_rules', policy_id=p.id) }}" style="display:inline;">
+          <button class="btn btn-primary btn-sm">Extract & Save</button>
+        </form>
+        <form method="post" action="{{ url_for('extract_rules_simple', policy_id=p.id) }}" style="display:inline;">
+          <button class="btn btn-success btn-sm">Extract (Simple Parse)</button>
+        </form>
+        <a href="{{ url_for('view_rules', policy_id=p.id) }}" class="btn btn-secondary btn-sm">View Rules</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

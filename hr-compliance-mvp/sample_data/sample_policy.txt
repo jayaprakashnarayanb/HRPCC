@@ -1,0 +1,10 @@
+Company Leave and Benefit Policy
+
+Leave Requests:
+- Annual leave must be requested at least 3 days before the leave start date.
+
+Benefit Claims:
+- Claims above $1,000 are not allowed without prior approval.
+- A receipt must be attached for all claims.
+- Allowed claim types include medical, transport, and meal.
+

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Datasets</h2>
+
+<form method="post" enctype="multipart/form-data" class="mb-4">
+  <div class="mb-3">
+    <label class="form-label">Dataset Name</label>
+    <input type="text" name="name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <input type="text" name="description" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Dataset Type</label>
+    <select name="dataset_type" class="form-select" required>
+      <option value="">Select...</option>
+      <option value="leave">Leave Requests</option>
+      <option value="benefit">Benefit Claims</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">CSV File</label>
+    <input type="file" name="file" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-success">Upload Dataset</button>
+</form>
+
+<h3>Existing Datasets</h3>
+<table class="table table-sm table-striped mb-4">
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Type</th><th>Description</th><th>File</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in datasets %}
+    <tr>
+      <td>{{ d.id }}</td>
+      <td>{{ d.name }}</td>
+      <td>{{ d.dataset_type }}</td>
+      <td>{{ d.description }}</td>
+      <td>{{ d.file_path }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>Run Compliance Check</h3>
+<form method="post" action="{{ url_for('run_compliance_route') }}">
+  <div class="mb-3">
+    <label class="form-label">Policy</label>
+    <select name="policy_id" class="form-select" required>
+      {% for p in policies %}
+        <option value="{{ p.id }}">{{ p.id }}: {{ p.name }} ({{ p.scope }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Dataset</label>
+    <select name="dataset_id" class="form-select" required>
+      {% for d in datasets %}
+        <option value="{{ d.id }}">{{ d.id }}: {{ d.name }} ({{ d.dataset_type }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" name="explain" id="explain" checked>
+    <label class="form-check-label" for="explain">
+      Generate explanations (LangChain)
+    </label>
+  </div>
+  <button type="submit" class="btn btn-primary">Run Compliance</button>
+</form>
+{% endblock %}

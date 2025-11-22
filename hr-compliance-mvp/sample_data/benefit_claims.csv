@@ -1,0 +1,4 @@
+employee_id,claim_amount,receipt_attached,claim_type,notes
+E003,1200,No,meal,Exceeds limit and no receipt
+E004,50,Yes,transport,Within limits
+

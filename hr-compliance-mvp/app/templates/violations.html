@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Violations</h2>
+
+{% if not violations %}
+  <p>No violations found yet.</p>
+{% else %}
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>ID</th><th>Employee</th><th>Policy</th><th>Rule</th>
+      <th>Risk</th><th>Evidence</th><th>Explanation</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for v in violations %}
+    <tr>
+      <td>{{ v.id }}</td>
+      <td>{{ v.employee_identifier }}</td>
+      <td>{{ v.policy.name if v.policy else v.policy_id }}</td>
+      <td>{{ v.rule.rule_code if v.rule else v.rule_id }}</td>
+      <td>{{ v.risk }}</td>
+      <td>{{ v.evidence }}</td>
+      <td>{{ v.explanation or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}
+

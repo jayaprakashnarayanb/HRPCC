@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Rules for Policy: {{ policy.name }}</h2>
+
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th>ID</th><th>Code</th><th>Category</th><th>Severity</th><th>Check Type</th><th>Params</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in rules %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.rule_code }}</td>
+      <td>{{ r.category }}</td>
+      <td>{{ r.severity }}</td>
+      <td>{{ r.check_type }}</td>
+      <td><pre>{{ r.params | tojson(indent=2) }}</pre></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

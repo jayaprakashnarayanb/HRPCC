@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Settings</h2>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">LLM Configuration</h5>
+    <ul class="mb-3">
+      <li>Model: <code>{{ model }}</code></li>
+      <li>GOOGLE_API_KEY set: <strong>{{ 'yes' if has_api_key else 'no' }}</strong></li>
+      <li>LangChain/LangGraph installed: <strong>{{ 'yes' if pkgs_ok else 'no' }}</strong></li>
+    </ul>
+    <form method="post" action="{{ url_for('settings_test') }}">
+      <button class="btn btn-primary" type="submit">Test LLM Connectivity</button>
+    </form>
+  </div>
+  <div class="card-footer text-muted">
+    Ensure <code>GOOGLE_API_KEY</code> is set in your environment. Override model via <code>GEMINI_MODEL</code>.
+  </div>
+  </div>
+
+{% endblock %}
