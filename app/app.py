@@ -116,7 +116,6 @@ def create_app():
                 return redirect(url_for("policies"))
 
         policies_list = db.query(Policy).all()
-        datasets_list = db.query(Dataset).all()
 
         # Optional selected policy for side-by-side view
         selected_policy = None
@@ -150,7 +149,6 @@ def create_app():
         return render_template(
             "policies.html",
             policies=policies_list,
-            datasets=datasets_list,
             selected_policy=selected_policy,
             rules_json_str=rules_json_str,
         )

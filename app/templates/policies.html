@@ -2,26 +2,6 @@
 {% block content %}
 <h2>Policies (Leave & Benefit Claims)</h2>
 
-<h3>Existing Datasets</h3>
-<table class="table table-sm table-striped mb-4">
-  <thead>
-    <tr>
-      <th>ID</th><th>Name</th><th>Type</th><th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for d in datasets %}
-    <tr>
-      <td>{{ d.id }}</td>
-      <td>{{ d.name }}</td>
-      <td>{{ d.dataset_type }}</td>
-      <td>
-        <a href="{{ url_for('download_dataset', dataset_id=d.id) }}" class="btn btn-sm btn-outline-secondary">Download</a>
-      </td>
-    </tr>
-  {% endfor %}
-  </tbody>
-  </table>
 
 <h3>View Policy & Rules</h3>
 <form method="get" class="row g-2 mb-3">
@@ -55,26 +35,6 @@
   </div>
 {% endif %}
 
-<form method="post" class="mb-4">
-  <div class="mb-3">
-    <label class="form-label">Policy Name</label>
-    <input type="text" name="name" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Scope</label>
-    <select name="scope" class="form-select">
-      <option value="both">Leave & Benefits</option>
-      <option value="leave">Leave only</option>
-      <option value="benefit">Benefits only</option>
-    </select>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Policy Text</label>
-    <textarea name="raw_text" rows="8" class="form-control" required></textarea>
-  </div>
-  <button class="btn btn-success" type="submit">Save Policy</button>
-  </form>
-
 <h3>Existing Policies</h3>
 <table class="table table-sm table-striped">
   <thead>
@@ -104,4 +64,28 @@
   {% endfor %}
   </tbody>
 </table>
+
+<div class="d-flex justify-content-end mb-2">
+  <button type="button" class="btn btn-success btn-sm" onclick="const f=document.getElementById('newPolicyForm'); if(f) { f.style.display = (f.style.display==='none' || f.style.display==='') ? 'block' : 'none'; }">Add New Policy</button>
+</div>
+
+<form id="newPolicyForm" method="post" class="mb-4" style="display:none;">
+  <div class="mb-3">
+    <label class="form-label">Policy Name</label>
+    <input type="text" name="name" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Scope</label>
+    <select name="scope" class="form-select">
+      <option value="both">Leave & Benefits</option>
+      <option value="leave">Leave only</option>
+      <option value="benefit">Benefits only</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Policy Text</label>
+    <textarea name="raw_text" rows="8" class="form-control" required></textarea>
+  </div>
+  <button class="btn btn-primary" type="submit">Save Policy</button>
+  </form>
 {% endblock %}

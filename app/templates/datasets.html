@@ -2,6 +2,30 @@
 {% block content %}
 <h2>Datasets</h2>
 
+<h3>Existing Datasets</h3>
+<table class="table table-sm table-striped mb-4">
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Type</th><th>Description</th><th>File</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in datasets %}
+    <tr>
+      <td>{{ d.id }}</td>
+      <td>{{ d.name }}</td>
+      <td>{{ d.dataset_type }}</td>
+      <td>{{ d.description }}</td>
+      <td>{{ d.file_path }}</td>
+      <td>
+        <a href="{{ url_for('download_dataset', dataset_id=d.id) }}" class="btn btn-sm btn-outline-secondary">Download</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>Add New Dataset</h3>
 <form method="post" enctype="multipart/form-data" class="mb-4">
   <div class="mb-3">
     <label class="form-label">Dataset Name</label>
@@ -25,29 +49,6 @@
   </div>
   <button type="submit" class="btn btn-success">Upload Dataset</button>
 </form>
-
-<h3>Existing Datasets</h3>
-<table class="table table-sm table-striped mb-4">
-  <thead>
-    <tr>
-      <th>ID</th><th>Name</th><th>Type</th><th>Description</th><th>File</th><th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for d in datasets %}
-    <tr>
-      <td>{{ d.id }}</td>
-      <td>{{ d.name }}</td>
-      <td>{{ d.dataset_type }}</td>
-      <td>{{ d.description }}</td>
-      <td>{{ d.file_path }}</td>
-      <td>
-        <a href="{{ url_for('download_dataset', dataset_id=d.id) }}" class="btn btn-sm btn-outline-secondary">Download</a>
-      </td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
 
 <h3>Run Compliance Check</h3>
 <form method="post" action="{{ url_for('run_compliance_route') }}">
