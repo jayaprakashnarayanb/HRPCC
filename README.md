@@ -30,10 +30,8 @@ A minimal Flask + SQLAlchemy app to manage HR policies, extract machine‑checka
 Open http://127.0.0.1:5000
 
 ### Seed demo data
-- Visit `http://127.0.0.1:5000/seed` once to create:
-  - A sample policy and 4 rules (leave + benefits)
-  - Two datasets pointing to files in `sample_data/`
-  - Runs a compliance check to populate violations
+- On first run, the app auto‑seeds a sample policy, 4 rules (leave + benefits), and two datasets by copying the CSVs from `sample_data/` into your configured `UPLOAD_DIR` (`/data/uploads` on Render, otherwise `uploads/`), then runs a compliance check to populate violations.
+- You can also visit `http://127.0.0.1:5000/seed` to re‑ensure the demo data exists; this is idempotent and will re‑run compliance for the sample datasets.
 
 ## Sample Data
 - `sample_data/sample_policy.txt`
@@ -90,12 +88,12 @@ Build and run with Docker:
 - `docker build -t main .`
 - `docker run --rm -p 8000:8000 -e FLASK_SECRET_KEY=dev main`
 
-Open http://localhost:8000 then hit `/seed` once for demo data.
+Open http://localhost:8000. Demo data is auto‑seeded on first run. `/seed` remains available to re‑ensure demo data if needed.
 
 ### Docker Compose
 - `cd main`
 - `docker compose up --build`
-- App: http://localhost:8000 (seed at `/seed`)
+- App: http://localhost:8000 (demo data auto‑seeded; `/seed` optional)
 
 Ensure the `GOOGLE_API_KEY` is set in your environment or compose file for rule extraction and explanations.
 

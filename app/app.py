@@ -1,5 +1,7 @@
 # app/app.py
 import os
+import shutil
+import json
 from flask import (
     Flask, request, render_template, redirect,
     url_for, jsonify, flash
@@ -32,6 +34,18 @@ def create_app():
 
     # Create DB tables
     Base.metadata.create_all(bind=engine)
+
+    # Seed demo data on first run (idempotent)
+    # Only when there are no policies and no datasets yet.
+    try:
+        db_check = next(get_db())
+        has_policies = db_check.query(Policy).count() > 0
+        has_datasets = db_check.query(Dataset).count() > 0
+        if not has_policies and not has_datasets:
+            _seed_demo_data(db_check, run_compliance_now=True)
+    except Exception as _e:
+        # Avoid blocking app startup on seed issues
+        pass
 
     # LLM configuration via environment (Gemini):
     # - GOOGLE_API_KEY (required)
@@ -347,134 +361,7 @@ def create_app():
     @app.route("/seed")
     def seed():
         db = next(get_db())
-
-        # Load sample policy text
-        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        sample_dir = os.path.join(repo_root, "sample_data")
-        policy_path = os.path.join(sample_dir, "sample_policy.txt")
-        try:
-            with open(policy_path, "r", encoding="utf-8") as f:
-                policy_text = f.read()
-        except Exception:
-            policy_text = (
-                "Annual leave must be requested at least 3 days in advance.\n"
-                "Claims above $1,000 are not allowed without prior approval.\n"
-                "A receipt must be attached for all claims.\n"
-                "Allowed claim types include medical, transport, and meal.\n"
-            )
-
-        # Ensure a policy exists
-        policy = db.query(Policy).filter(Policy.name == "Sample HR Policy").first()
-        created = {"policy": False, "rules": 0, "datasets": 0, "violations": 0}
-        if not policy:
-            policy = Policy(name="Sample HR Policy", raw_text=policy_text, scope="both")
-            db.add(policy)
-            db.commit()
-            db.refresh(policy)
-            created["policy"] = True
-
-        # Seed rules if none exist for this policy
-        existing_rules = db.query(Rule).filter(Rule.policy_id == policy.id).count()
-        if existing_rules == 0:
-            rule_defs = [
-                {
-                    "rule_code": "LEAVE_001",
-                    "description": "Annual leave must be requested at least 3 days before the start date.",
-                    "category": "leave",
-                    "severity": "medium",
-                    "check_type": "leave_advance_days",
-                    "params": {
-                        "request_date_column": "request_date",
-                        "start_date_column": "leave_start_date",
-                        "min_days_before": 3,
-                    },
-                },
-                {
-                    "rule_code": "BEN_001",
-                    "description": "Claim amount must be <= 1000.",
-                    "category": "benefit",
-                    "severity": "high",
-                    "check_type": "benefit_max_amount",
-                    "params": {"amount_column": "claim_amount", "max_amount": 1000},
-                },
-                {
-                    "rule_code": "BEN_002",
-                    "description": "All benefit claims require a receipt.",
-                    "category": "benefit",
-                    "severity": "medium",
-                    "check_type": "benefit_requires_receipt",
-                    "params": {"receipt_column": "receipt_attached"},
-                },
-                {
-                    "rule_code": "BEN_003",
-                    "description": "Allowed claim types are medical, transport, and meal.",
-                    "category": "benefit",
-                    "severity": "low",
-                    "check_type": "benefit_allowed_types",
-                    "params": {
-                        "type_column": "claim_type",
-                        "allowed_types": ["medical", "transport", "meal"],
-                    },
-                },
-            ]
-            for r in rule_defs:
-                db.add(
-                    Rule(
-                        policy_id=policy.id,
-                        rule_code=r["rule_code"],
-                        description=r["description"],
-                        category=r["category"],
-                        severity=r["severity"],
-                        check_type=r["check_type"],
-                        params=r["params"],
-                    )
-                )
-            db.commit()
-            created["rules"] = len(rule_defs)
-
-        # Seed datasets (point to sample CSVs)
-        leave_csv = os.path.join(sample_dir, "leave_requests.csv")
-        benefit_csv = os.path.join(sample_dir, "benefit_claims.csv")
-
-        def ensure_dataset(name, dtype, path, desc):
-            ds = (
-                db.query(Dataset)
-                .filter(Dataset.name == name, Dataset.dataset_type == dtype)
-                .first()
-            )
-            if not ds and os.path.exists(path):
-                ds = Dataset(
-                    name=name,
-                    description=desc,
-                    dataset_type=dtype,
-                    file_path=os.path.abspath(path),
-                )
-                db.add(ds)
-                db.commit()
-                db.refresh(ds)
-                return ds, True
-            return ds, False
-
-        leave_ds, created_leave = ensure_dataset(
-            "Sample Leave Requests", "leave", leave_csv, "Demo leave requests"
-        )
-        benefit_ds, created_ben = ensure_dataset(
-            "Sample Benefit Claims", "benefit", benefit_csv, "Demo benefit claims"
-        )
-        created["datasets"] = int(created_leave) + int(created_ben)
-
-        # Run compliance for available datasets
-        total_violations = 0
-        for ds in (leave_ds, benefit_ds):
-            if not ds:
-                continue
-            db.query(Violation).filter(
-                Violation.policy_id == policy.id, Violation.dataset_id == ds.id
-            ).delete()
-            vs = run_compliance(db, policy.id, ds.id)
-            total_violations += len(vs)
-        created["violations"] = total_violations
-
+        created = _seed_demo_data(db, run_compliance_now=True)
         flash(
             f"Seeded: policy={'yes' if created['policy'] else 'no'}, "
             f"rules={created['rules']}, datasets={created['datasets']}, "
@@ -489,3 +376,147 @@ def create_app():
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)
+
+# Internal helper to seed demo data. Safe to call multiple times.
+def _seed_demo_data(db: Session, run_compliance_now: bool = True):
+    # Load sample policy text
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    sample_dir = os.path.join(repo_root, "sample_data")
+    policy_path = os.path.join(sample_dir, "sample_policy.txt")
+    try:
+        with open(policy_path, "r", encoding="utf-8") as f:
+            policy_text = f.read()
+    except Exception:
+        policy_text = (
+            "Annual leave must be requested at least 3 days in advance.\n"
+            "Claims above $1,000 are not allowed without prior approval.\n"
+            "A receipt must be attached for all claims.\n"
+            "Allowed claim types include medical, transport, and meal.\n"
+        )
+
+    # Ensure a policy exists
+    policy = db.query(Policy).filter(Policy.name == "Sample HR Policy").first()
+    created = {"policy": False, "rules": 0, "datasets": 0, "violations": 0}
+    if not policy:
+        policy = Policy(name="Sample HR Policy", raw_text=policy_text, scope="both")
+        db.add(policy)
+        db.commit()
+        db.refresh(policy)
+        created["policy"] = True
+
+    # Seed rules if none exist for this policy
+    existing_rules = db.query(Rule).filter(Rule.policy_id == policy.id).count()
+    if existing_rules == 0:
+        rule_defs = [
+            {
+                "rule_code": "LEAVE_001",
+                "description": "Annual leave must be requested at least 3 days before the start date.",
+                "category": "leave",
+                "severity": "medium",
+                "check_type": "leave_advance_days",
+                "params": {
+                    "request_date_column": "request_date",
+                    "start_date_column": "leave_start_date",
+                    "min_days_before": 3,
+                },
+            },
+            {
+                "rule_code": "BEN_001",
+                "description": "Claim amount must be <= 1000.",
+                "category": "benefit",
+                "severity": "high",
+                "check_type": "benefit_max_amount",
+                "params": {"amount_column": "claim_amount", "max_amount": 1000},
+            },
+            {
+                "rule_code": "BEN_002",
+                "description": "All benefit claims require a receipt.",
+                "category": "benefit",
+                "severity": "medium",
+                "check_type": "benefit_requires_receipt",
+                "params": {"receipt_column": "receipt_attached"},
+            },
+            {
+                "rule_code": "BEN_003",
+                "description": "Allowed claim types are medical, transport, and meal.",
+                "category": "benefit",
+                "severity": "low",
+                "check_type": "benefit_allowed_types",
+                "params": {
+                    "type_column": "claim_type",
+                    "allowed_types": ["medical", "transport", "meal"],
+                },
+            },
+        ]
+        for r in rule_defs:
+            db.add(
+                Rule(
+                    policy_id=policy.id,
+                    rule_code=r["rule_code"],
+                    description=r["description"],
+                    category=r["category"],
+                    severity=r["severity"],
+                    check_type=r["check_type"],
+                    params=r["params"],
+                )
+            )
+        db.commit()
+        created["rules"] = len(rule_defs)
+
+    # Seed datasets by copying sample CSVs into UPLOAD_DIR
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    src_leave = os.path.join(sample_dir, "leave_requests.csv")
+    src_benefit = os.path.join(sample_dir, "benefit_claims.csv")
+    dest_leave = os.path.join(UPLOAD_DIR, "sample_leave_requests.csv")
+    dest_benefit = os.path.join(UPLOAD_DIR, "sample_benefit_claims.csv")
+
+    try:
+        if os.path.exists(src_leave) and not os.path.exists(dest_leave):
+            shutil.copyfile(src_leave, dest_leave)
+        if os.path.exists(src_benefit) and not os.path.exists(dest_benefit):
+            shutil.copyfile(src_benefit, dest_benefit)
+    except Exception:
+        # Non-fatal if copy fails; datasets may simply not be created.
+        pass
+
+    def ensure_dataset(name, dtype, path, desc):
+        ds = (
+            db.query(Dataset)
+            .filter(Dataset.name == name, Dataset.dataset_type == dtype)
+            .first()
+        )
+        if not ds and os.path.exists(path):
+            ds = Dataset(
+                name=name,
+                description=desc,
+                dataset_type=dtype,
+                file_path=os.path.abspath(path),
+            )
+            db.add(ds)
+            db.commit()
+            db.refresh(ds)
+            return ds, True
+        return ds, False
+
+    leave_ds, created_leave = ensure_dataset(
+        "Sample Leave Requests", "leave", dest_leave, "Demo leave requests"
+    )
+    benefit_ds, created_ben = ensure_dataset(
+        "Sample Benefit Claims", "benefit", dest_benefit, "Demo benefit claims"
+    )
+    created["datasets"] = int(created_leave) + int(created_ben)
+
+    # Run compliance for available datasets
+    if run_compliance_now:
+        total_violations = 0
+        for ds in (leave_ds, benefit_ds):
+            if not ds:
+                continue
+            db.query(Violation).filter(
+                Violation.policy_id == policy.id, Violation.dataset_id == ds.id
+            ).delete()
+            vs = run_compliance(db, policy.id, ds.id)
+            total_violations += len(vs)
+        created["violations"] = total_violations
+
+    return created
