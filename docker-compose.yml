@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: hr-compliance-mvp:latest
-    container_name: hr-compliance-mvp
+    image: main:latest
+    container_name: main
     environment:
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-dev}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
@@ -14,7 +14,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - uploads_data:/app/hr-compliance-mvp/uploads
+      - uploads_data:/app/main/uploads
 
 volumes:
   uploads_data:

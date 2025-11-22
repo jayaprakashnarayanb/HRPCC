@@ -18,7 +18,7 @@ A minimal Flask + SQLAlchemy app to manage HR policies, extract machine‑checka
 
 ## Quickstart (Local)
 1. Python 3.10+
-2. `cd hr-compliance-mvp`
+2. `cd main`
 3. `python -m venv .venv && source .venv/bin/activate`
 4. `pip install -r requirements.txt`
 5. `export FLASK_SECRET_KEY=dev` (optional)
@@ -86,14 +86,14 @@ If your CSVs use different column names, either adapt them to match or use the L
 
 ## Docker
 Build and run with Docker:
-- `cd hr-compliance-mvp`
-- `docker build -t hr-compliance-mvp .`
-- `docker run --rm -p 8000:8000 -e FLASK_SECRET_KEY=dev hr-compliance-mvp`
+- `cd main`
+- `docker build -t main .`
+- `docker run --rm -p 8000:8000 -e FLASK_SECRET_KEY=dev main`
 
 Open http://localhost:8000 then hit `/seed` once for demo data.
 
 ### Docker Compose
-- `cd hr-compliance-mvp`
+- `cd main`
 - `docker compose up --build`
 - App: http://localhost:8000 (seed at `/seed`)
 
