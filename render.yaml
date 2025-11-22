@@ -1,8 +1,10 @@
 services:
   - type: web
     name: main
-    env: python
+    env: docker
     rootDir: .
+    dockerfilePath: ./Dockerfile
+    autodeploy: true
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
