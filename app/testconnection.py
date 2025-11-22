@@ -18,7 +18,7 @@ def main():
         sys.exit(1)
 
     # Keep in sync with app/ai.py behavior
-    model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
     if model.endswith("-latest"):
         model = model[: -len("-latest")]
 
@@ -35,7 +35,7 @@ def main():
             print(
                 "Hint: 404 often means the model name is invalid or unavailable for your API key.\n"
                 " - Ensure packages are up to date: pip install -U langchain-google-genai google-generativeai\n"
-                " - Try GEMINI_MODEL=gemini-1.5-flash (without -latest)\n"
+                " - Try GEMINI_MODEL=gemini-2.5-flash (without -latest)\n"
                 " - If you intend to use Vertex AI, use the Vertex integration (langchain-google-vertexai) instead."
             )
         sys.exit(1)

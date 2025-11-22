@@ -10,7 +10,7 @@ services:
     environment:
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-dev}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
     ports:
       - "8000:8000"
     volumes:

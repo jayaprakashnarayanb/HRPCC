@@ -49,7 +49,7 @@ def create_app():
 
     # LLM configuration via environment (Gemini):
     # - GOOGLE_API_KEY (required)
-    # - GEMINI_MODEL (optional, default: gemini-1.5-flash)
+    # - GEMINI_MODEL (optional, default: gemini-2.5-flash)
 
     # ---------- ROUTES ----------
 
@@ -69,7 +69,7 @@ def create_app():
     # ---- Settings ----
     @app.route("/settings", methods=["GET"])
     def settings_page():
-        openai_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        openai_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         has_api_key = bool(os.getenv("GOOGLE_API_KEY"))
         # Check package availability
         try:

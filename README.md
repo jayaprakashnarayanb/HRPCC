@@ -25,7 +25,7 @@ A minimal Flask + SQLAlchemy app to manage HR policies, extract machine‑checka
 5. `export FLASK_SECRET_KEY=dev` (optional)
 6. Set Gemini credentials for LangChain:
    - `export GOOGLE_API_KEY=...` (required)
-   - `export GEMINI_MODEL=gemini-1.5-flash` (optional)
+   - `export GEMINI_MODEL=gemini-2.5-flash` (optional)
 7. Run: `python -m flask --app app.app run --debug`
 
 Open http://127.0.0.1:5000
@@ -107,6 +107,6 @@ Ensure the `GOOGLE_API_KEY` is set in your environment or compose file for rule 
 - 401: API keys are not supported by this API
   - Cause: Some environments expose Google Application Default Credentials (ADC), causing the client to attempt OAuth2 instead of API key auth, which can trigger a 401 with this message.
   - Fix: This app now explicitly passes `GOOGLE_API_KEY` to the Gemini client. Ensure `GOOGLE_API_KEY` is set and valid. If your organization forbids API keys and requires OAuth/Service Account, you’ll need to integrate OAuth2 credentials instead of API keys (not covered by this MVP).
- - 404: models/gemini-1.5-flash-latest is not found for API version v1beta
+- 404: models/gemini-2.5-flash-latest is not found for API version v1beta
    - Cause: Some library versions or environments use the v1beta API where the "-latest" alias is not available or not supported for `generateContent`.
-   - Fix: Use a concrete model name without the `-latest` suffix (e.g., `gemini-1.5-flash` or `gemini-1.5-pro`). The app defaults to `gemini-1.5-flash` and strips `-latest` automatically if present.
+  - Fix: Use a concrete model name without the `-latest` suffix (e.g., `gemini-2.5-flash` or `gemini-2.5-pro`). The app defaults to `gemini-2.5-flash` and strips `-latest` automatically if present.

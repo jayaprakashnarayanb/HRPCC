@@ -22,7 +22,7 @@ def _get_llm():
     # Default to a model name supported by v1beta generateContent.
     # Some environments/libraries use v1beta where the "-latest" alias is not available.
     # Normalize by stripping a trailing "-latest" if present.
-    model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
     if model_name.endswith("-latest"):
         model_name = model_name[: -len("-latest")]
     # Low temperature for deterministic structure. Pass api_key explicitly to avoid
