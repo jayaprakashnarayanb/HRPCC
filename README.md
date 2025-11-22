@@ -46,6 +46,16 @@ Upload the CSVs on the Datasets page. Add a policy (e.g., paste sample_policy.tx
 - Policies: use “Preview Extraction” to inspect the JSON before saving; use “Extract & Save” to persist rules immediately.
 - Policies: use “Extract (Simple Parse)” to convert supported plain-English sentences into rules deterministically (no LLM required).
 
+### CLI: Translate policy text to JSON (LLM)
+Use the provided script to convert a policy text file into rules JSON using the same LangChain/LangGraph extractor used by the app.
+
+- Requirements: `GOOGLE_API_KEY` set, optional `GEMINI_MODEL` (defaults to `gemini-2.5-flash`).
+- Usage examples:
+  - `python scripts/extract_rules_llm.py sample_data/sample_policy.txt --scope both --pretty`
+  - `cat sample_data/sample_policy.txt | python scripts/extract_rules_llm.py --scope leave --pretty`
+
+The script prints a JSON array of rules to stdout.
+
 ## Simple-English Policy Format (Deterministic)
 You can write policies in straightforward sentences that the app can parse without any AI. Supported patterns are case-insensitive and should end in periods:
 
